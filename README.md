@@ -2,8 +2,8 @@
 
 This is an implementation of the following paper:
 
-[DAGs with NO TEARS: 
-Continuous Optimization for Structure Learning](https://arxiv.org/abs/1803.01422), NIPS 2018. (Spotlight) 
+[DAGs with NO TEARS: Continuous Optimization for 
+Structure Learning](https://arxiv.org/abs/1803.01422), NIPS 2018. (Spotlight) 
 \
 Xun Zheng, Bryon Aragam, Pradeep Ravikumar, Eric Xing.
 
@@ -56,7 +56,7 @@ where `h` is a *smooth* function whose level set exactly characterizes the space
     It runs the 50-line version of NOTEARS on a 10-node Erdos-Renyi graph. 
 
 3. For more examples, run jupyter notebooks. 
-    ```bash
+    ```
     jupyter notebook 
     ```
 
