@@ -4,7 +4,7 @@ This is an implementation of the following paper:
 
 [DAGs with NO TEARS: Continuous Optimization for 
 Structure Learning](https://arxiv.org/abs/1803.01422), NIPS 2018. (Spotlight) 
-\
+
 Xun Zheng, Bryon Aragam, Pradeep Ravikumar, Eric Xing.
 
 If you find it useful, please consider citing:
@@ -32,8 +32,9 @@ we introduce a fundamentally different strategy: we formulate it as a purely
 **continuous** optimization problem over real matrices that avoids this 
 combinatorial constraint entirely. 
 In other words, 
-<img width="450" alt="characterization" src="https://user-images.githubusercontent.com/1810194/47379174-2eb1af00-d6c8-11e8-8dae-4626690127b9.png"/>
-\
+
+<img width="460" alt="characterization" src="https://user-images.githubusercontent.com/1810194/47379174-2eb1af00-d6c8-11e8-8dae-4626690127b9.png"/>
+
 where `h` is a *smooth* function whose level set exactly characterizes the space of DAGs.
 
 
