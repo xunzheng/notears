@@ -3,9 +3,13 @@
 This is an implementation of the following paper:
 
 [DAGs with NO TEARS: Continuous Optimization for 
-Structure Learning](https://arxiv.org/abs/1803.01422), NIPS 2018. (Spotlight) 
+Structure Learning](https://arxiv.org/abs/1803.01422) 
+([NIPS 2018](https://nips.cc/Conferences/2018/), Spotlight)
 
-Xun Zheng, Bryon Aragam, Pradeep Ravikumar, Eric Xing.
+[Xun Zheng](https://www.cs.cmu.edu/~xunzheng/), 
+[Bryon Aragam](https://www.cs.cmu.edu/~naragam/),
+[Pradeep Ravikumar](https://www.cs.cmu.edu/~pradeepr/),
+[Eric Xing](https://www.cs.cmu.edu/~epxing/).
 
 If you find it useful, please consider citing:
 ```
