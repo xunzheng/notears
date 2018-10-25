@@ -1,3 +1,8 @@
+"""Various utility functions for experiments.
+
+Use G = nx.DiGraph(W) to convert adj matrix to directed graph.
+Use W = nx.to_numpy_array(G) to convert directed graph to adj matrix.
+"""
 import numpy as np
 import scipy.linalg as slin
 import networkx as nx

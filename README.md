@@ -39,29 +39,34 @@ In other words,
 
 <img width="460" alt="characterization" src="https://user-images.githubusercontent.com/1810194/47379174-2eb1af00-d6c8-11e8-8dae-4626690127b9.png"/>
 
-where `h` is a *smooth* function whose level set exactly characterizes the space of DAGs.
+where `h` is a *smooth* function whose level set exactly characterizes the 
+space of DAGs.
 
 
 ## Usage
 
-1. Set up `python3`. We recommend working under virtual environment, e.g. the built-in `venv`: 
+1. Minimum setup.
+    We recommend working under virtual environment, e.g. the built-in `venv`:
     ```
     python3 -m venv /path/to/notears_env
     source /path/to/notears_env/bin/activate
     pip install --upgrade pip setuptools wheel
     ```
 
-2. Download & run. Clone the repo, install required packages, and run a simple demo:
+2. Download & run.
+    Clone the repo, install required packages, and run a simple demo:
     ```
     git clone https://github.com/xunzheng/notears.git
     cd notears/
     pip install -r requirements.txt
-    python notears_simple_demo.py
+    python simple_demo.py
     ```
-    It runs the 50-line version of NOTEARS on a 10-node Erdos-Renyi graph. 
+    It runs the [50-line](simple_demo.py) version of NOTEARS on 
+    a 10-node Erdos-Renyi graph. 
 
-3. For more examples, run jupyter notebooks. 
+3. Further setup for more examples.   
     ```
+    git submodule update --init --recursive
     jupyter notebook 
     ```
 

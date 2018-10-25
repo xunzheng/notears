@@ -1,11 +1,20 @@
-"""The 50 line version of the simple NOTEARS algorithm.
+"""Demo for the simple 50-line version of notears algorithm.
 
-The full version is in ... TODO
+Steps:
+1. Simulate a random graph with d nodes.
+2. Simulate n samples from the SEM.
+3. Run the simple notears algorithm.
+4. Evaluate the predictive accuracy.
+
+Note: this unregularized notears algorithm works in n >> d.
 """
-
 import numpy as np
 import scipy.linalg as slin
 import scipy.optimize as sopt
+import glog as log
+import networkx as nx
+
+import utils
 
 
 def notears_simple(X: np.ndarray,
@@ -59,3 +68,32 @@ def notears_simple(X: np.ndarray,
             break
     w[np.abs(w) < w_threshold] = 0
     return w.reshape([d, d])
+
+
+if __name__ == '__main__':
+    # configurations
+    n, d = 1000, 10
+    graph_type, degree, sem_type = 'erdos-renyi', 4, 'linear-gauss'
+    log.info('Graph: %d node, avg degree %d, %s graph', d, degree, graph_type)
+    log.info('Data: %d samples, %s SEM', n, sem_type)
+
+    # graph
+    log.info('Simulating graph ...')
+    G = utils.simulate_random_dag(d, degree, graph_type)
+    log.info('Simulating graph ... Done')
+
+    # data
+    log.info('Simulating data ...')
+    X = utils.simulate_sem(G, n, sem_type)
+    log.info('Simulating data ... Done')
+
+    # solve optimization problem
+    log.info('Solving equality constrained problem ...')
+    W_est = notears_simple(X)
+    G_est = nx.DiGraph(W_est)
+    log.info('Solving equality constrained problem ... Done')
+
+    # evaluate
+    fdr, tpr, fpr, shd, nnz = utils.count_accuracy(G, G_est)
+    log.info('Accuracy: fdr %f, tpr %f, fpr %f, shd %d, nnz %d',
+             fdr, tpr, fpr, shd, nnz)
