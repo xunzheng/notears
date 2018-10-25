@@ -1,0 +1,3 @@
+[submodule "cppext/eigen"]
+	path = cppext/eigen
+	url = https://github.com/eigenteam/eigen-git-mirror.git
