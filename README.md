@@ -15,7 +15,7 @@ If you find it useful, please consider citing:
 ```
 @inproceedings{zheng2018dags,
     author = {Zheng, Xun and Aragam, Bryon and Ravikumar, Pradeep and Xing, Eric P.},
-    booktitle = {NIPS},
+    booktitle = {Advances in Neural Information Processing Systems {(NIPS)}},
     title = {{DAGs with NO TEARS: Continuous Optimization for Structure Learning}},
     year = {2018}
 }
@@ -56,17 +56,18 @@ space of DAGs.
 
 ## Contents
 
-- `simple_demo.py` - simple demo for the 50-line version of NOTEARS
-- `utils.py` - graph simulation, data simulation, and accuracy evaluation
-- `live_demo.ipynb` - live demo in jupyter notebook
-- `notears.py` - code for the full version of NOTEARS
-- `cppext` - C++ implementation of ProxQN used by the full version
+- Simple NOTEARS (without l1 regularization)
+    - `simple_demo.py` - the 50-line implementation of simple NOTEARS
+    - `utils.py` - graph simulation, data simulation, and accuracy evaluation
+- Full NOTEARS (with l1 regularization)
+    - `cppext/` - C++ implementation of ProxQN
+    - `notears.py` - the full NOTEARS with live progress monitoring
+    - `live_demo.ipynb` - jupyter notebook for live demo
 
 
-## Download and run a quick demo
+## Running a simple demo
 
-This is the simplest way to try out the code. 
-Simply clone the repo, install packages, and run a quick demo.
+The simplest way to try out NOTEARS is to run the toy demo:
 ```
 git clone https://github.com/xunzheng/notears.git
 cd notears/
@@ -92,7 +93,7 @@ I1026 02:20:00.791845 87863 simple_demo.py:99] Accuracy: fdr 0.000000, tpr 1.000
 ```
 
 
-## Install & run the full version
+## Running the full version
 
 The Proximal Quasi-Newton algorithm is at the core of the full NOTEARS with 
 l1-regularization. 
@@ -119,11 +120,54 @@ Select *Kernel --> Restart & Run All*.
 (TODO: gif)
 
 
-## Results
+## Results: Erdos-Renyi graph
 
-<img width="200" alt="W_true" src="https://user-images.githubusercontent.com/1810194/47596959-7c444b00-d958-11e8-8587-d355eaf3f7d1.png" />
-<img width="600" alt="W_est_n1000" src="https://user-images.githubusercontent.com/1810194/47597035-1d330600-d959-11e8-9d59-d2ce3fac0f39.png" />
-<img width="600" alt="W_est_n20" src"https://user-images.githubusercontent.com/1810194/47597063-608d7480-d959-11e8-8085-2c2a98d16704.png" />
+- Ground truth: `d = 20` nodes, `2d = 40` expected edges.
+
+  <img width="193" alt="ER2_W_true" src="https://user-images.githubusercontent.com/1810194/47596959-7c444b00-d958-11e8-8587-d355eaf3f7d1.png" />
+
+- Estimate with `n = 1000` samples: 
+  `lambda = 0`, `lambda = 0.1`, and `FGS` (baseline).
+
+  <img width="600" alt="ER2_W_est_n1000" src="https://user-images.githubusercontent.com/1810194/47597035-1d330600-d959-11e8-9d59-d2ce3fac0f39.png" />
+
+  Both `lambda = 0` and `lambda = 0.1` are close to the ground truth graph 
+  when `n` is large.
+     
+- Estimate with `n = 20` samples:
+  `lambda = 0`, `lambda = 0.1`, and `FGS` (baseline).
+
+  <img width="600" alt="ER2_W_est_n20" src="https://user-images.githubusercontent.com/1810194/47597063-608d7480-d959-11e8-8085-2c2a98d16704.png" />
+
+  When `n` is small, `lambda = 0` perform worse while 
+  `lambda = 0.1` remains accurate, showing the advantage of L1-regularization. 
+
+## Results: Scale-free graph
+
+- Ground truth: `d = 20` nodes, `4d = 80` expected edges.
+
+  <img width="193" alt="SF4_W_true" src="https://user-images.githubusercontent.com/1810194/47598929-a7876400-d971-11e8-903c-109d7f3754cb.png" />
+
+  The degree distribution is significantly different from the Erdos-Renyi graph.
+  One nice property of our method is that it is agnostic about the 
+  graph structure.
+
+- Estimate with `n = 1000` samples: 
+  `lambda = 0`, `lambda = 0.1`, and `FGS` (baseline).
+
+  <img width="600" alt="SF4_W_est_n1000" src="https://user-images.githubusercontent.com/1810194/47598936-c1c14200-d971-11e8-8572-a589c98de0b7.png" />
+
+  The observation is similar to Erdos-Renyi graph: 
+  both `lambda = 0` and `lambda = 0.1` accurately estimates the ground truth
+  when `n` is large.
+
+- Estimate with `n = 20` samples:
+  `lambda = 0`, `lambda = 0.1`, and `FGS` (baseline).
+
+  <img width="600" alt="SF4_W_est_n20" src="https://user-images.githubusercontent.com/1810194/47598941-dc93b680-d971-11e8-81db-72bd19866290.png" />
+
+  Similarly, `lambda = 0` suffers from small `n` while 
+  `lambda = 0.1` remains accurate, showing the advantage of L1-regularization. 
 
 
 ## Custom implementations  
