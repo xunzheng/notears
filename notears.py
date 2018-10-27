@@ -1,5 +1,10 @@
-"""
+"""The full NOTEARS algorithm with l1 regularization.
 
+Defines two functions:
+- notears(): the vanilla python implementation of the algorithm
+- notears_live(): same algorithm with live plotting in jupyter notebook
+
+The full NOTEARS algorithm works with both large n and small n.
 """
 import numpy as np
 import networkx as nx
@@ -14,12 +19,48 @@ from bokeh.io import show, push_notebook
 import cppext
 
 
-def monitor_notears(G: nx.DiGraph,
-                    X: np.ndarray,
-                    lambda1: float,
-                    max_iter: int = 100,
-                    h_tol: float = 1e-8,
-                    w_threshold: float = 0.3) -> np.ndarray:
+def notears(X: np.ndarray,
+            lambda1: float,
+            max_iter: int = 100,
+            h_tol: float = 1e-8,
+            w_threshold: float = 0.3) -> np.ndarray:
+    """Solve min_W F(W; X) s.t. h(W) = 0 using augmented Lagrangian.
+
+    Args:
+        X: [n,d] sample matrix
+        lambda1: l1 regularization parameter
+        max_iter: max number of dual ascent steps
+        h_tol: exit if |h(w)| <= h_tol
+        w_threshold: fixed threshold for edge weights
+
+    Returns:
+        W_est: [d,d] estimate
+    """
+    n, d = X.shape
+    w_est, w_new = np.zeros(d * d), np.zeros(d * d)
+    rho, alpha, h, h_new = 1.0, 0.0, np.inf, np.inf
+    for _ in range(max_iter):
+        while rho < 1e+20:
+            w_new = cppext.minimize_subproblem(w_est, X, rho, alpha, lambda1)
+            h_new = cppext.h_func(w_new)
+            if h_new > 0.25 * h:
+                rho *= 10
+            else:
+                break
+        w_est, h = w_new, h_new
+        alpha += rho * h
+        if h <= h_tol:
+            break
+    w_est[np.abs(w_est) < w_threshold] = 0
+    return w_est.reshape([d, d])
+
+
+def notears_live(G: nx.DiGraph,
+                 X: np.ndarray,
+                 lambda1: float,
+                 max_iter: int = 100,
+                 h_tol: float = 1e-8,
+                 w_threshold: float = 0.3) -> np.ndarray:
     """Monitor the optimization progress live in notebook.
 
     Args:
@@ -31,15 +72,15 @@ def monitor_notears(G: nx.DiGraph,
         w_threshold: fixed threshold for edge weights
 
     Returns:
-        W: [d,d] solution
+        W_est: [d,d] estimate
     """
-    # ground truth
-    w_true = nx.to_numpy_array(G).flatten()
-
     # initialization
     n, d = X.shape
-    w, w_new = np.zeros(d * d), np.zeros(d * d)
+    w_est, w_new = np.zeros(d * d), np.zeros(d * d)
     rho, alpha, h, h_new = 1.0, 0.0, np.inf, np.inf
+
+    # ground truth
+    w_true = nx.to_numpy_array(G).flatten()
 
     # progress, stream
     progress_data = {key:[] for key in ['step', 'F', 'h',
@@ -52,21 +93,21 @@ def monitor_notears(G: nx.DiGraph,
     row = all_ids.T.flatten()
     col = all_ids.flatten()
     heatmap_data = {'row': row, 'col': col,
-                    'w_true': w_true, 'w': w, 'w_diff': w_true - w}
+                    'w_true': w_true, 'w_est': w_est, 'w_diff': w_true - w_est}
     heatmap_source = ColumnDataSource(data=heatmap_data)
     mapper = LinearColorMapper(palette=Palette, low=-2, high=2)
 
     # common tools
-    tools = 'crosshair,ywheel_zoom,save,reset'
+    tools = 'crosshair,save,reset'
 
-    # F(w) vs step
+    # F(w_est) vs step
     F_true = cppext.F_func(w_true, X, lambda1)
-    fig0 = figure(plot_width=250, plot_height=250, y_axis_type='log',
-                  tools=tools, toolbar_location="above")
+    fig0 = figure(plot_width=270, plot_height=240,
+                  y_axis_type='log', tools=tools)
     fig0.ray(0, F_true, length=0, angle=0, color='green',
              line_dash='dashed', line_width=2, legend='F(w_true)')
     fig0.line('step', 'F', source=progress_source,
-              color='red', line_width=2, legend='F(w)')
+              color='red', line_width=2, legend='F(w_est)')
     fig0.title.text = "Objective"
     fig0.xaxis.axis_label = "step"
     fig0.legend.location = "bottom_left"
@@ -76,11 +117,11 @@ def monitor_notears(G: nx.DiGraph,
                                        ("F_true", '%.6g' % F_true)],
                              mode='vline'))
 
-    # h(w) vs step
-    fig1 = figure(plot_width=250, plot_height=250, y_axis_type='log',
-                  tools=tools, toolbar_location="above")
+    # h(w_est) vs step
+    fig1 = figure(plot_width=280, plot_height=240,
+                  y_axis_type='log', tools=tools)
     fig1.line('step', 'h', source=progress_source,
-              color='magenta', line_width=2, legend='h(w)')
+              color='magenta', line_width=2, legend='h(w_est)')
     fig1.title.text = "Constraint"
     fig1.xaxis.axis_label = "step"
     fig1.legend.location = "bottom_left"
@@ -91,23 +132,20 @@ def monitor_notears(G: nx.DiGraph,
                                        ("alpha", "@alpha")],
                              mode='vline'))
 
-    # ||w - w_true|| vs step
-    fig2 = figure(plot_width=250, plot_height=250, y_axis_type='log',
-                  tools=tools, toolbar_location="above")
+    # ||w_true - w_est|| vs step
+    fig2 = figure(plot_width=270, plot_height=240,
+                  y_axis_type='log', tools=tools)
     fig2.line('step', 'l2_dist', source=progress_source,
-              color='blue', line_width=2, legend='w')
+              color='blue', line_width=2)
     fig2.title.text = "L2 distance to W_true"
     fig2.xaxis.axis_label = "step"
-    fig2.legend.location = "bottom_left"
-    fig2.legend.background_fill_alpha = 0.5
     fig2.add_tools(HoverTool(tooltips=[("step", "@step"),
-                                       ("w", "@l2_dist")],
+                                       ("w_est", "@l2_dist")],
                              mode='vline'))
 
     # heatmap of w_true
-    fig3 = figure(plot_width=250, plot_height=250,
-                  x_range=ids, y_range=list(reversed(ids)),
-                  toolbar_location="above")
+    fig3 = figure(plot_width=270, plot_height=240,
+                  x_range=ids, y_range=list(reversed(ids)), tools=tools)
     fig3.rect(x='col', y='row', width=1, height=1, source=heatmap_source,
               line_color=None, fill_color=transform('w_true', mapper))
     fig3.title.text = 'W_true'
@@ -115,24 +153,22 @@ def monitor_notears(G: nx.DiGraph,
     fig3.add_tools(HoverTool(tooltips=[("row, col", "@row, @col"),
                                        ("w_true", "@w_true")]))
 
-    # heatmap of w
-    fig4 = figure(plot_width=250, plot_height=250,
-                  x_range=ids, y_range=list(reversed(ids)),
-                  toolbar_location="above")
+    # heatmap of w_est
+    fig4 = figure(plot_width=280, plot_height=240,
+                  x_range=ids, y_range=list(reversed(ids)), tools=tools)
     fig4.rect(x='col', y='row', width=1, height=1, source=heatmap_source,
-              line_color=None, fill_color=transform('w', mapper))
-    fig4.title.text = 'W'
+              line_color=None, fill_color=transform('w_est', mapper))
+    fig4.title.text = 'W_est'
     fig4.axis.visible = False
     fig4.add_tools(HoverTool(tooltips=[("row, col", "@row, @col"),
-                                       ("w", "@w")]))
+                                       ("w_est", "@w_est")]))
 
-    # heatmap of w_true - w
-    fig5 = figure(plot_width=250, plot_height=250,
-                  x_range=ids, y_range=list(reversed(ids)),
-                  toolbar_location="above")
+    # heatmap of w_true - w_est
+    fig5 = figure(plot_width=270, plot_height=240,
+                  x_range=ids, y_range=list(reversed(ids)), tools=tools)
     fig5.rect(x='col', y='row', width=1, height=1, source=heatmap_source,
                line_color=None, fill_color=transform('w_diff', mapper))
-    fig5.title.text = 'W_true - W'
+    fig5.title.text = 'W_true - W_est'
     fig5.axis.visible = False
     fig5.add_tools(HoverTool(tooltips=[("row, col", "@row, @col"),
                                        ("w_diff", "@w_diff")]))
@@ -145,28 +181,28 @@ def monitor_notears(G: nx.DiGraph,
     # enter main loop
     for it in range(max_iter):
         while rho < 1e+20:
-            w_new = cppext.minimize_subproblem(w, X, rho, alpha, lambda1)
+            w_new = cppext.minimize_subproblem(w_est, X, rho, alpha, lambda1)
             h_new = cppext.h_func(w_new)
             if h_new > 0.25 * h:
                 rho *= 10
             else:
                 break
-        w, h = w_new, h_new
+        w_est, h = w_new, h_new
         alpha += rho * h
         # update figures
         progress_source.stream({'step': [it],
-                                'F': [cppext.F_func(w, X, lambda1)],
+                                'F': [cppext.F_func(w_est, X, lambda1)],
                                 'h': [h],
                                 'rho': [rho],
                                 'alpha': [alpha],
-                                'l2_dist': [np.linalg.norm(w - w_true)],})
-        heatmap_source.patch({'w': [(slice(d * d), w)],
-                              'w_diff': [(slice(d * d), w_true - w)]})
+                                'l2_dist': [np.linalg.norm(w_est - w_true)],})
+        heatmap_source.patch({'w_est': [(slice(d * d), w_est)],
+                              'w_diff': [(slice(d * d), w_true - w_est)]})
         push_notebook(handle=handle)
         # check termination of main loop
         if h <= h_tol:
             break
 
     # final threshold
-    w[np.abs(w) < w_threshold] = 0
-    return w.reshape([d, d])
+    w_est[np.abs(w_est) < w_threshold] = 0
+    return w_est.reshape([d, d])

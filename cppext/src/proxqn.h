@@ -1,6 +1,6 @@
-//#define EIGEN_USE_MKL_ALL        //uncomment if available
-#define EIGEN_USE_BLAS
-#define EIGEN_USE_LAPACKE
+// #define EIGEN_USE_MKL_ALL       // uncomment if available
+// #define EIGEN_USE_BLAS          // uncomment if available
+// #define EIGEN_USE_LAPACKE       // uncomment if available
 
 #include "Eigen/Core"
 #include "Eigen/LU"

@@ -6,7 +6,8 @@ Steps:
 3. Run the simple notears algorithm.
 4. Evaluate the predictive accuracy.
 
-Note: this unregularized notears algorithm works in n >> d.
+Note: this version implements NOTEARS without l1 regularization,
+i.e. lambda = 0, hence it requires n >> d.
 """
 import numpy as np
 import scipy.linalg as slin
@@ -30,7 +31,7 @@ def notears_simple(X: np.ndarray,
         w_threshold: fixed threshold for edge weights
 
     Returns:
-        W: [d,d] solution
+        W_est: [d,d] estimate
     """
     def _h(w):
         W = w.reshape([d, d])
@@ -50,24 +51,24 @@ def notears_simple(X: np.ndarray,
         return obj_grad.flatten()
 
     n, d = X.shape
-    w, w_new = np.zeros(d * d), np.zeros(d * d)
+    w_est, w_new = np.zeros(d * d), np.zeros(d * d)
     rho, alpha, h, h_new = 1.0, 0.0, np.inf, np.inf
     bnds = [(0, 0) if i == j else (None, None) for i in range(d) for j in range(d)]
     for _ in range(max_iter):
         while rho < 1e+20:
-            sol = sopt.minimize(_func, w, method='L-BFGS-B', jac=_grad, bounds=bnds)
+            sol = sopt.minimize(_func, w_est, method='L-BFGS-B', jac=_grad, bounds=bnds)
             w_new = sol.x
             h_new = _h(w_new)
             if h_new > 0.25 * h:
                 rho *= 10
             else:
                 break
-        w, h = w_new, h_new
+        w_est, h = w_new, h_new
         alpha += rho * h
         if h <= h_tol:
             break
-    w[np.abs(w) < w_threshold] = 0
-    return w.reshape([d, d])
+    w_est[np.abs(w_est) < w_threshold] = 0
+    return w_est.reshape([d, d])
 
 
 if __name__ == '__main__':

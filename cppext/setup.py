@@ -10,14 +10,14 @@ cppext_module = Extension(
              'src/lasso_problem.h'],
     include_dirs=[np.get_include(), 'eigen/'],
     extra_compile_args=['-O3',
-                        '-march=corei7-avx',
+                        # '-march=corei7-avx',  # uncomment if available
                         '-std=c++11',
                         '-Wno-parentheses'],
-    extra_link_args=['-framework',
-                     'accelerate',
-                     '/usr/local/opt/lapack/lib/liblapacke.dylib',
-                     '-march=corei7-avx',
-                     '-std=c++11']
+    # uncomment if available
+    # extra_link_args=['-framework',
+    #                  'accelerate',
+    #                  '/usr/local/opt/lapack/lib/liblapacke.dylib',
+    #                  '-march=corei7-avx']
 )
 
 setup(name='cppext',
