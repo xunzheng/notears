@@ -24,7 +24,7 @@ If you find it useful, please consider citing:
 
 ## tl;dr Structure learning in <50 lines
 
-Check out [`simple_demo.py`](simple_demo.py) for a complete, end-to-end implementation of the NOTEARS algorithm in less than **50-lines**.  
+Check out [`simple_demo.py`](simple_demo.py) for a complete, end-to-end implementation of the NOTEARS algorithm in fewer than **50 lines**.  
 
 
 ## Introduction
