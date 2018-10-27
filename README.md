@@ -22,14 +22,14 @@ If you find it useful, please consider citing:
 ```
 
 
-## TL;DR
+## tl;dr Structure learning in <50 lines
 
-Check out [`simple_demo.py`](simple_demo.py) for the **50-line** NOTEARS algorithm.  
+Check out [`simple_demo.py`](simple_demo.py) for a complete, end-to-end implementation of the NOTEARS algorithm in less than **50-lines**.  
 
 
 ## Introduction
 
-A directed graphical model (aka Bayesian network) with `d` nodes defines a 
+A directed acyclic graphical model (aka Bayesian network) with `d` nodes defines a 
 distribution of random vector of size `d`. 
 We are interested in the Bayesian Network Structure Learning (BNSL) problem: 
 given `n` samples from such distribution, how to estimate the graph `G`? 
@@ -74,12 +74,12 @@ cd notears/
 pip install -r requirements.txt
 python simple_demo.py
 ```
-It runs the [50-line version](simple_demo.py) of NOTEARS 
+This runs the [50-line version](simple_demo.py) of NOTEARS 
 without l1-regularization 
 on a randomly generated 10-node Erdos-Renyi graph. 
 Since the problem size is small, it will only take a few seconds.
 
-You will get outputs like this:
+You should see output like this:
 ```
 I1026 02:19:54.995781 87863 simple_demo.py:77] Graph: 10 node, avg degree 4, erdos-renyi graph
 I1026 02:19:54.995896 87863 simple_demo.py:78] Data: 1000 samples, linear-gauss SEM
@@ -108,7 +108,7 @@ python setup.py install
 cd .. 
 ```
 
-We are ready to run a live demo. Type
+The code comes with a Jupyter notebook that runs a live demo. This allows you to monitor the progress as the algorithm runs. Type
 ```
 jupyter notebook
 ```
@@ -120,7 +120,7 @@ Select *Kernel --> Restart & Run All*.
 (TODO: gif)
 
 
-## Results: Erdos-Renyi graph
+## Examples: Erdos-Renyi graph
 
 - Ground truth: `d = 20` nodes, `2d = 40` expected edges.
 
@@ -142,7 +142,7 @@ Select *Kernel --> Restart & Run All*.
   When `n` is small, `lambda = 0` perform worse while 
   `lambda = 0.1` remains accurate, showing the advantage of L1-regularization. 
 
-## Results: Scale-free graph
+## Examples: Scale-free graph
 
 - Ground truth: `d = 20` nodes, `4d = 80` expected edges.
 
@@ -170,6 +170,6 @@ Select *Kernel --> Restart & Run All*.
   `lambda = 0.1` remains accurate, showing the advantage of L1-regularization. 
 
 
-## Custom implementations  
+## Other implementations  
 
 - Python: https://github.com/jmoss20/notears
