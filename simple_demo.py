@@ -1,10 +1,7 @@
-"""Demo for the simple 50-line version of notears algorithm.
+"""Implementation of the simple 50-line version of NOTEARS algorithm.
 
-Steps:
-1. Simulate a random graph with d nodes.
-2. Simulate n samples from the SEM.
-3. Run the simple notears algorithm.
-4. Evaluate the predictive accuracy.
+Defines the h function, the augmented Lagrangian, and its gradient.
+Each augmented Lagrangian subproblem is minimized by L-BFGS-B from scipy.
 
 Note: this version implements NOTEARS without l1 regularization,
 i.e. lambda = 0, hence it requires n >> d.
@@ -12,10 +9,6 @@ i.e. lambda = 0, hence it requires n >> d.
 import numpy as np
 import scipy.linalg as slin
 import scipy.optimize as sopt
-import glog as log
-import networkx as nx
-
-import utils
 
 
 def notears_simple(X: np.ndarray,
@@ -72,6 +65,10 @@ def notears_simple(X: np.ndarray,
 
 
 if __name__ == '__main__':
+    import glog as log
+    import networkx as nx
+    import utils
+
     # configurations
     n, d = 1000, 10
     graph_type, degree, sem_type = 'erdos-renyi', 4, 'linear-gauss'
