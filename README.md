@@ -68,11 +68,11 @@ space of DAGs.
 ## Running a simple demo
 
 The simplest way to try out NOTEARS is to run the toy demo:
-```
-git clone https://github.com/xunzheng/notears.git
-cd notears/
-pip install -r requirements.txt
-python simple_demo.py
+```bash
+$ git clone https://github.com/xunzheng/notears.git
+$ cd notears/
+$ pip install -r requirements.txt
+$ python simple_demo.py
 ```
 This runs the [50-line version](simple_demo.py) of NOTEARS 
 without l1-regularization 
@@ -101,16 +101,16 @@ Hence for efficiency concerns it is implemented in a C++ module `cppext`
 using [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page).
 
 To install `cppext`, download Eigen submodule and compile the extension:
-```
-git submodule update --init --recursive
-cd cppext/
-python setup.py install
-cd .. 
+```bash
+$ git submodule update --init --recursive
+$ cd cppext/
+$ python setup.py install
+$ cd .. 
 ```
 
 The code comes with a Jupyter notebook that runs a live demo. This allows you to monitor the progress as the algorithm runs. Type
-```
-jupyter notebook
+```bash
+$ jupyter notebook
 ```
 and click open [`live_demo.ipynb`](live_demo.ipynb) in
 the browser.
