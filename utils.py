@@ -28,7 +28,7 @@ def simulate_random_dag(d: int,
         B = np.tril((np.random.rand(d, d) < prob).astype(float), k=-1)
     elif graph_type == 'barabasi-albert':
         m = int(round(degree / 2))
-        B = np.zeros(d, d)
+        B = np.zeros([d, d])
         bag = [0]
         for ii in range(1, d):
             dest = np.random.choice(bag, size=m)
