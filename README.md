@@ -1,4 +1,4 @@
-# DAGs with NO TEARS
+# DAGs with NO TEARS :no_entry_sign::droplet:
 
 This is an implementation of the following paper:
 
