@@ -9,7 +9,7 @@ import networkx as nx
 
 
 def simulate_random_dag(d: int,
-                        degree: int,
+                        degree: float,
                         graph_type: str,
                         w_range: tuple = (0.5, 2.0)) -> nx.DiGraph:
     """Simulate random DAG with some expected degree.
