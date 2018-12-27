@@ -4,7 +4,7 @@ This is an implementation of the following paper:
 
 [DAGs with NO TEARS: Continuous Optimization for 
 Structure Learning](https://arxiv.org/abs/1803.01422) 
-([NIPS 2018](https://nips.cc/Conferences/2018/), Spotlight)
+([NeurIPS 2018](https://nips.cc/Conferences/2018/), Spotlight)
 
 [Xun Zheng](https://www.cs.cmu.edu/~xunzheng/), 
 [Bryon Aragam](https://www.cs.cmu.edu/~naragam/),
@@ -15,7 +15,7 @@ If you find it useful, please consider citing:
 ```
 @inproceedings{zheng2018dags,
     author = {Zheng, Xun and Aragam, Bryon and Ravikumar, Pradeep and Xing, Eric P.},
-    booktitle = {Advances in Neural Information Processing Systems {(NIPS)}},
+    booktitle = {Advances in Neural Information Processing Systems},
     title = {{DAGs with NO TEARS: Continuous Optimization for Structure Learning}},
     year = {2018}
 }
