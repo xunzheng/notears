@@ -1,5 +1,14 @@
-from distutils.core import setup, Extension
 import numpy as np
+
+from distutils.core import setup, Extension
+from platform import system as get_os_name
+
+
+# Configure the compiler based on the OS
+if get_os_name().lower() == "darwin":
+    os_compile_flags = ["-mmacosx-version-min=10.9"]
+else:
+    os_compile_flags = []
 
 cppext_module = Extension(
     'cppext',
@@ -12,7 +21,7 @@ cppext_module = Extension(
     extra_compile_args=['-O3',
                         # '-march=corei7-avx',  # uncomment if available
                         '-std=c++11',
-                        '-Wno-parentheses'],
+                        '-Wno-parentheses'] + os_compile_flags,
     # uncomment if available
     # extra_link_args=['-framework',
     #                  'accelerate',
