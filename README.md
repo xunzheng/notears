@@ -173,3 +173,4 @@ Select *Kernel --> Restart & Run All*.
 ## Other implementations  
 
 - Python: https://github.com/jmoss20/notears
+- Tensorflow with Python: https://github.com/ignavier/notears-tensorflow
