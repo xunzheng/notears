@@ -1,208 +1,100 @@
-"""The full NOTEARS algorithm with l1 regularization.
-
-Defines two functions:
-- notears(): the vanilla python implementation of the algorithm
-- notears_live(): same algorithm with live plotting in jupyter notebook
-
-The full NOTEARS algorithm works with both large n and small n.
-"""
 import numpy as np
-import networkx as nx
-from bokeh.plotting import figure
-from bokeh.models import ColumnDataSource, LinearColorMapper
-from bokeh.transform import transform
-from bokeh.palettes import RdBu11 as Palette
-from bokeh.models import HoverTool
-from bokeh.layouts import gridplot
-from bokeh.io import show, push_notebook
-
-import cppext
+import scipy.linalg as slin
+import scipy.optimize as sopt
+from scipy.special import expit as sigmoid
 
 
-def notears(X: np.ndarray,
-            lambda1: float,
-            max_iter: int = 100,
-            h_tol: float = 1e-8,
-            w_threshold: float = 0.3) -> np.ndarray:
-    """Solve min_W F(W; X) s.t. h(W) = 0 using augmented Lagrangian.
+def notears_linear_l1(X, lambda1, loss_type, max_iter=100, h_tol=1e-8, rho_max=1e+16, w_threshold=0.3):
+    """Solve min_W L(W; X) + lambda1 ‖W‖_1 s.t. h(W) = 0 using augmented Lagrangian.
 
     Args:
-        X: [n,d] sample matrix
-        lambda1: l1 regularization parameter
-        max_iter: max number of dual ascent steps
-        h_tol: exit if |h(w)| <= h_tol
-        w_threshold: fixed threshold for edge weights
+        X (np.ndarray): [n, d] sample matrix
+        lambda1 (float): l1 penalty parameter
+        loss_type (str): l2, logistic, poisson
+        max_iter (int): max num of dual ascent steps
+        h_tol (float): exit if |h(w_est)| <= htol
+        rho_max (float): exit if rho >= rho_max
+        w_threshold (float): drop edge if |weight| < threshold
 
     Returns:
-        W_est: [d,d] estimate
+        W_est (np.ndarray): [d, d] estimated DAG
     """
+    def _loss(W):
+        """Evaluate value and gradient of loss."""
+        M = X @ W
+        if loss_type == 'l2':
+            R = X - M
+            loss = 0.5 / X.shape[0] * (R ** 2).sum()
+            D = - 1.0 / X.shape[0] * X.T @ R
+        elif loss_type == 'logistic':
+            loss = 1.0 / X.shape[0] * (np.logaddexp(0, M) - X * M).sum()
+            D = 1.0 / X.shape[0] * X.T @ (sigmoid(M) - X)
+        elif loss_type == 'poisson':
+            S = np.exp(M)
+            loss = 1.0 / X.shape[0] * (S - X * M).sum()
+            D = 1.0 / X.shape[0] * X.T @ (S - X)
+        else:
+            raise ValueError('unknown loss type')
+        return loss, D
+
+    def _h(W):
+        """Evaluate value and gradient of acyclicity constraint."""
+        #     E = slin.expm(W * W)  # (Zheng et al. 2018)
+        #     h = np.trace(E) - d
+        M = np.eye(d) + W * W / d  # (Yu et al. 2019)
+        E = np.linalg.matrix_power(M, d - 1)
+        h = (E.T * M).sum() - d
+        return h, E
+
+    def _adj(w):
+        """Convert doubled variables ([2 d^2] array) back to original variables ([d, d] matrix)."""
+        return (w[:d * d] - w[d * d:]).reshape([d, d])
+
+    def _func(w):
+        """Evaluate value and gradient of augmented Lagrangian for doubled variables ([2 d^2] array)."""
+        W = _adj(w)
+        loss, D = _loss(W)
+        h, E = _h(W)
+        obj = loss + 0.5 * rho * h * h + alpha * h + lambda1 * w.sum()
+        G = D + (rho * h + alpha) * E.T * W * 2
+        grad_cat = np.concatenate((G + lambda1, - G + lambda1), axis=None)
+        return obj, grad_cat
+
     n, d = X.shape
-    w_est, w_new = np.zeros(d * d), np.zeros(d * d)
-    rho, alpha, h, h_new = 1.0, 0.0, np.inf, np.inf
+    w_est, rho, alpha, h = np.zeros(2 * d * d), 1.0, 0.0, np.inf  # double w_est into (w_pos, w_neg)
+    bnds = [(0, 0) if i == j else (0, None) for _ in range(2) for i in range(d) for j in range(d)]
     for _ in range(max_iter):
-        while rho < 1e+20:
-            w_new = cppext.minimize_subproblem(w_est, X, rho, alpha, lambda1)
-            h_new = cppext.h_func(w_new)
+        w_new, h_new = None, None
+        while rho < rho_max:
+            sol = sopt.minimize(_func, w_est, method='L-BFGS-B', jac=True, bounds=bnds)
+            w_new = sol.x
+            h_new, _ = _h(_adj(w_new))
             if h_new > 0.25 * h:
                 rho *= 10
             else:
                 break
         w_est, h = w_new, h_new
         alpha += rho * h
-        if h <= h_tol:
+        if h <= h_tol or rho >= rho_max:
             break
-    w_est[np.abs(w_est) < w_threshold] = 0
-    return w_est.reshape([d, d])
+    W_est = _adj(w_est)
+    W_est[np.abs(W_est) < w_threshold] = 0
+    return W_est
 
 
-def notears_live(G: nx.DiGraph,
-                 X: np.ndarray,
-                 lambda1: float,
-                 max_iter: int = 100,
-                 h_tol: float = 1e-8,
-                 w_threshold: float = 0.3) -> np.ndarray:
-    """Monitor the optimization progress live in notebook.
+if __name__ == '__main__':
+    import utils as ut
+    ut.set_random_seed(1)
 
-    Args:
-        G: ground truth graph
-        X: [n,d] sample matrix
-        lambda1: l1 regularization parameter
-        max_iter: max number of dual ascent steps
-        h_tol: exit if |h(w)| <= h_tol
-        w_threshold: fixed threshold for edge weights
+    n, d, s0, graph_type, sem_type = 100, 40, 40, 'ER', 'gauss'
+    B_true = ut.simulate_dag(d, s0, graph_type)
+    W_true = ut.simulate_parameter(B_true)
+    X = ut.simulate_linear_sem(W_true, n, sem_type)
 
-    Returns:
-        W_est: [d,d] estimate
-    """
-    # initialization
-    n, d = X.shape
-    w_est, w_new = np.zeros(d * d), np.zeros(d * d)
-    rho, alpha, h, h_new = 1.0, 0.0, np.inf, np.inf
+    W_est = notears_linear_l1(X, lambda1=0.1, loss_type='l2')
 
-    # ground truth
-    w_true = nx.to_numpy_array(G).flatten()
+    import igraph as ig
+    assert ig.Graph.Weighted_Adjacency(W_est.tolist()).is_dag()
 
-    # progress, stream
-    progress_data = {key:[] for key in ['step', 'F', 'h',
-                                        'rho', 'alpha', 'l2_dist']}
-    progress_source = ColumnDataSource(data=progress_data)
-
-    # heatmap, patch
-    ids = [str(i) for i in range(d)]
-    all_ids = np.tile(ids, [d, 1])
-    row = all_ids.T.flatten()
-    col = all_ids.flatten()
-    heatmap_data = {'row': row, 'col': col,
-                    'w_true': w_true, 'w_est': w_est, 'w_diff': w_true - w_est}
-    heatmap_source = ColumnDataSource(data=heatmap_data)
-    mapper = LinearColorMapper(palette=Palette, low=-2, high=2)
-
-    # common tools
-    tools = 'crosshair,save,reset'
-
-    # F(w_est) vs step
-    F_true = cppext.F_func(w_true, X, lambda1)
-    fig0 = figure(plot_width=270, plot_height=240,
-                  y_axis_type='log', tools=tools)
-    fig0.ray(0, F_true, length=0, angle=0, color='green',
-             line_dash='dashed', line_width=2, legend='F(w_true)')
-    fig0.line('step', 'F', source=progress_source,
-              color='red', line_width=2, legend='F(w_est)')
-    fig0.title.text = "Objective"
-    fig0.xaxis.axis_label = "step"
-    fig0.legend.location = "bottom_left"
-    fig0.legend.background_fill_alpha = 0.5
-    fig0.add_tools(HoverTool(tooltips=[("step", "@step"),
-                                       ("F", "@F"),
-                                       ("F_true", '%.6g' % F_true)],
-                             mode='vline'))
-
-    # h(w_est) vs step
-    fig1 = figure(plot_width=280, plot_height=240,
-                  y_axis_type='log', tools=tools)
-    fig1.line('step', 'h', source=progress_source,
-              color='magenta', line_width=2, legend='h(w_est)')
-    fig1.title.text = "Constraint"
-    fig1.xaxis.axis_label = "step"
-    fig1.legend.location = "bottom_left"
-    fig1.legend.background_fill_alpha = 0.5
-    fig1.add_tools(HoverTool(tooltips=[("step", "@step"),
-                                       ("h", "@h"),
-                                       ("rho", "@rho"),
-                                       ("alpha", "@alpha")],
-                             mode='vline'))
-
-    # ||w_true - w_est|| vs step
-    fig2 = figure(plot_width=270, plot_height=240,
-                  y_axis_type='log', tools=tools)
-    fig2.line('step', 'l2_dist', source=progress_source,
-              color='blue', line_width=2)
-    fig2.title.text = "L2 distance to W_true"
-    fig2.xaxis.axis_label = "step"
-    fig2.add_tools(HoverTool(tooltips=[("step", "@step"),
-                                       ("w_est", "@l2_dist")],
-                             mode='vline'))
-
-    # heatmap of w_true
-    fig3 = figure(plot_width=270, plot_height=240,
-                  x_range=ids, y_range=list(reversed(ids)), tools=tools)
-    fig3.rect(x='col', y='row', width=1, height=1, source=heatmap_source,
-              line_color=None, fill_color=transform('w_true', mapper))
-    fig3.title.text = 'W_true'
-    fig3.axis.visible = False
-    fig3.add_tools(HoverTool(tooltips=[("row, col", "@row, @col"),
-                                       ("w_true", "@w_true")]))
-
-    # heatmap of w_est
-    fig4 = figure(plot_width=280, plot_height=240,
-                  x_range=ids, y_range=list(reversed(ids)), tools=tools)
-    fig4.rect(x='col', y='row', width=1, height=1, source=heatmap_source,
-              line_color=None, fill_color=transform('w_est', mapper))
-    fig4.title.text = 'W_est'
-    fig4.axis.visible = False
-    fig4.add_tools(HoverTool(tooltips=[("row, col", "@row, @col"),
-                                       ("w_est", "@w_est")]))
-
-    # heatmap of w_true - w_est
-    fig5 = figure(plot_width=270, plot_height=240,
-                  x_range=ids, y_range=list(reversed(ids)), tools=tools)
-    fig5.rect(x='col', y='row', width=1, height=1, source=heatmap_source,
-               line_color=None, fill_color=transform('w_diff', mapper))
-    fig5.title.text = 'W_true - W_est'
-    fig5.axis.visible = False
-    fig5.add_tools(HoverTool(tooltips=[("row, col", "@row, @col"),
-                                       ("w_diff", "@w_diff")]))
-
-    # display figures as grid
-    grid = gridplot([[fig0, fig1, fig2],
-                     [fig3, fig4, fig5]], merge_tools=False)
-    handle = show(grid, notebook_handle=True)
-
-    # enter main loop
-    for it in range(max_iter):
-        while rho < 1e+20:
-            w_new = cppext.minimize_subproblem(w_est, X, rho, alpha, lambda1)
-            h_new = cppext.h_func(w_new)
-            if h_new > 0.25 * h:
-                rho *= 10
-            else:
-                break
-        w_est, h = w_new, h_new
-        alpha += rho * h
-        # update figures
-        progress_source.stream({'step': [it],
-                                'F': [cppext.F_func(w_est, X, lambda1)],
-                                'h': [h],
-                                'rho': [rho],
-                                'alpha': [alpha],
-                                'l2_dist': [np.linalg.norm(w_est - w_true)],})
-        heatmap_source.patch({'w_est': [(slice(d * d), w_est)],
-                              'w_diff': [(slice(d * d), w_true - w_est)]})
-        push_notebook(handle=handle)
-        # check termination of main loop
-        if h <= h_tol:
-            break
-
-    # final threshold
-    w_est[np.abs(w_est) < w_threshold] = 0
-    return w_est.reshape([d, d])
+    acc = ut.count_accuracy(W_true, W_est)
+    print(acc)

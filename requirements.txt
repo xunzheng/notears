@@ -1,6 +1,0 @@
-numpy
-scipy
-glog
-networkx
-jupyter
-bokeh

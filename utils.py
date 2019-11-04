@@ -1,114 +1,129 @@
-"""Various utility functions for experiments.
-
-Use G = nx.DiGraph(W) to convert adj matrix to directed graph.
-Use W = nx.to_numpy_array(G) to convert directed graph to adj matrix.
-"""
 import numpy as np
-import scipy.linalg as slin
-import networkx as nx
+from scipy.special import expit as sigmoid
+import igraph as ig
+import random
 
 
-def simulate_random_dag(d: int,
-                        degree: float,
-                        graph_type: str,
-                        w_range: tuple = (0.5, 2.0)) -> nx.DiGraph:
-    """Simulate random DAG with some expected degree.
+def set_random_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+
+
+def simulate_dag(d, s0, graph_type):
+    """Simulate random DAG with some expected number of edges.
 
     Args:
-        d: number of nodes
-        degree: expected node degree, in + out
-        graph_type: {erdos-renyi, barabasi-albert, full}
-        w_range: weight range +/- (low, high)
+        d (int): num of nodes
+        s0 (int): expected num of edges
+        graph_type (str): ER, SF
 
     Returns:
-        G: weighted DAG
+        B (np.ndarray): [d, d] binary adj matrix of DAG
     """
-    if graph_type == 'erdos-renyi':
-        prob = float(degree) / (d - 1)
-        B = np.tril((np.random.rand(d, d) < prob).astype(float), k=-1)
-    elif graph_type == 'barabasi-albert':
-        m = int(round(degree / 2))
-        B = np.zeros([d, d])
-        bag = [0]
-        for ii in range(1, d):
-            dest = np.random.choice(bag, size=m)
-            for jj in dest:
-                B[ii, jj] = 1
-            bag.append(ii)
-            bag.extend(dest)
-    elif graph_type == 'full':  # ignore degree, only for experimental use
-        B = np.tril(np.ones([d, d]), k=-1)
+    def _random_permutation(M):
+        # np.random.permutation permutes first axis only
+        P = np.random.permutation(np.eye(M.shape[0]))
+        return P.T @ M @ P
+
+    def _random_acyclic_orientation(B_und):
+        return np.tril(_random_permutation(B_und), k=-1)
+
+    def _graph_to_adjmat(G):
+        return np.array(G.get_adjacency().data)
+
+    if graph_type == 'ER':
+        # Erdos-Renyi
+        G_und = ig.Graph.Erdos_Renyi(n=d, m=s0)
+        B_und = _graph_to_adjmat(G_und)
+        B = _random_acyclic_orientation(B_und)
+    elif graph_type == 'SF':
+        # Scale-free, Barabasi-Albert
+        G = ig.Graph.Barabasi(n=d, m=int(round(s0 / d)), directed=True)
+        B = _graph_to_adjmat(G)
+    elif graph_type == 'BP':
+        # Bipartite, Sec 4.1 of (Gu, Fu, Zhou, 2018)
+        top = int(0.2 * d)
+        G = ig.Graph.Random_Bipartite(top, d - top, m=s0, directed=True, neimode=ig.OUT)
+        B = _graph_to_adjmat(G)
     else:
         raise ValueError('unknown graph type')
-    # random permutation
-    P = np.random.permutation(np.eye(d, d))  # permutes first axis only
-    B_perm = P.T.dot(B).dot(P)
-    U = np.random.uniform(low=w_range[0], high=w_range[1], size=[d, d])
-    U[np.random.rand(d, d) < 0.5] *= -1
-    W = (B_perm != 0).astype(float) * U
-    G = nx.DiGraph(W)
-    return G
+    B_perm = _random_permutation(B)
+    assert ig.Graph.Adjacency(B_perm.tolist()).is_dag()
+    return B_perm
 
 
-def simulate_sem(G: nx.DiGraph,
-                 n: int,
-                 sem_type: str,
-                 noise_scale: float = 1.0) -> np.ndarray:
-    """Simulate samples from SEM with specified type of noise.
+def simulate_parameter(B, w_range=(0.5, 2.0)):
+    """Simulate SEM parameters for a DAG.
 
     Args:
-        G: weigthed DAG
-        n: number of samples
-        sem_type: {linear-gauss,linear-exp,linear-gumbel}
-        noise_scale: scale parameter of noise distribution in linear SEM
+        B (np.ndarray): [d, d] binary adj matrix of DAG
+        w_range (tuple): weight range is +/- (low, high)
 
     Returns:
-        X: [n,d] sample matrix
+        W (np.ndarray): [d, d] weighted adj matrix of DAG
     """
-    W = nx.to_numpy_array(G)
-    d = W.shape[0]
-    X = np.zeros([n, d])
-    ordered_vertices = list(nx.topological_sort(G))
-    assert len(ordered_vertices) == d
-    for j in ordered_vertices:
-        parents = list(G.predecessors(j))
-        eta = X[:, parents].dot(W[parents, j])  # [n,]
-        if sem_type == 'linear-gauss':
-            X[:, j] = eta + np.random.normal(scale=noise_scale, size=n)
-        elif sem_type == 'linear-exp':
-            X[:, j] = eta + np.random.exponential(scale=noise_scale, size=n)
-        elif sem_type == 'linear-gumbel':
-            X[:, j] = eta + np.random.gumbel(scale=noise_scale, size=n)
+    S = np.random.randint(2, size=B.shape) * 2 - 1  # sign
+    U = np.random.uniform(low=w_range[0], high=w_range[1], size=B.shape)
+    W = B * S * U
+    return W
+
+
+def simulate_linear_sem(W, n, sem_type, noise_scale=1.0):
+    """Simulate samples from linear SEM with specified type of noise.
+
+    Args:
+        W (np.ndarray): [d, d] weighted adj matrix of DAG
+        n (int): num of samples, n=inf mimics population risk
+        sem_type (str): gauss, exp, gumbel, logistic, poisson
+        noise_scale (float): scale parameter of additive noise
+
+    Returns:
+        X (np.ndarray): [n, d] sample matrix, [d, d] if n=inf
+    """
+    def _simulate_single_equation(X, w):
+        """X: [n, num of parents], w: [num of parents], x: [n]"""
+        if sem_type == 'gauss':
+            z = np.random.normal(scale=noise_scale, size=n)
+            x = X @ w + z
+        elif sem_type == 'exp':
+            z = np.random.exponential(scale=noise_scale, size=n)
+            x = X @ w + z
+        elif sem_type == 'gumbel':
+            z = np.random.gumbel(scale=noise_scale, size=n)
+            x = X @ w + z
+        elif sem_type == 'logistic':
+            x = np.random.binomial(1, sigmoid(X @ w)) * 1.0
+        elif sem_type == 'poisson':
+            x = np.random.poisson(np.exp(X @ w)) * 1.0
         else:
             raise ValueError('unknown sem type')
-    return X
+        return x
 
-
-def simulate_population_sample(W: np.ndarray,
-                               Omega: np.ndarray) -> np.ndarray:
-    """Simulate data matrix X that matches population least squares.
-
-    Args:
-        W: [d,d] adjacency matrix
-        Omega: [d,d] noise covariance matrix
-
-    Returns:
-        X: [d,d] sample matrix
-    """
     d = W.shape[0]
-    X = np.sqrt(d) * slin.sqrtm(Omega).dot(np.linalg.pinv(np.eye(d) - W))
+    if np.isinf(n):
+        if sem_type == 'gauss':
+            # make 1/d X'X = true cov
+            X = np.sqrt(d) * noise_scale * np.linalg.pinv(np.eye(d) - W)
+            return X
+        else:
+            raise ValueError('population risk not available')
+    X = np.zeros([n, d])
+    G = ig.Graph.Weighted_Adjacency(W.tolist())
+    ordered_vertices = G.topological_sorting()
+    assert len(ordered_vertices) == d
+    for j in ordered_vertices:
+        parents = G.neighbors(j, mode=ig.IN)
+        X[:, j] = _simulate_single_equation(X[:, parents], W[parents, j])
     return X
 
 
-def count_accuracy(G_true: nx.DiGraph,
-                   G: nx.DiGraph,
-                   G_und: nx.DiGraph = None) -> tuple:
-    """Compute FDR, TPR, and FPR for B, or optionally for CPDAG B + B_und.
+def count_accuracy(W_true, W, W_und=None):
+    """Compute FDR, TPR, and FPR for B, or optionally for CPDAG = B + B_und.
 
     Args:
-        G_true: ground truth graph
-        G: predicted graph
-        G_und: predicted undirected edges in CPDAG, asymmetric
+        W_true (np.ndarray): [d, d] ground truth graph
+        W (np.ndarray): [d, d] predicted graph
+        W_und (np.ndarray): [d, d] predicted undirected edges in CPDAG, asymmetric
 
     Returns:
         fdr: (reverse + false positive) / prediction positive
@@ -117,11 +132,13 @@ def count_accuracy(G_true: nx.DiGraph,
         shd: undirected extra + undirected missing + reverse
         nnz: prediction positive
     """
-    B_true = nx.to_numpy_array(G_true) != 0
-    B = nx.to_numpy_array(G) != 0
-    B_und = None if G_und is None else nx.to_numpy_array(G_und)
-    d = B.shape[0]
+    d = W_true.shape[0]
+    # convert to binary adjacency matrix
+    B_true = (W_true != 0)
+    B = (W != 0)
+    B_und = None if W_und is None else (W_und != 0)
     # linear index of nonzeros
+    pred_und = None
     if B_und is not None:
         pred_und = np.flatnonzero(B_und)
     pred = np.flatnonzero(B)
@@ -159,4 +176,4 @@ def count_accuracy(G_true: nx.DiGraph,
     extra_lower = np.setdiff1d(pred_lower, cond_lower, assume_unique=True)
     missing_lower = np.setdiff1d(cond_lower, pred_lower, assume_unique=True)
     shd = len(extra_lower) + len(missing_lower) + len(reverse)
-    return fdr, tpr, fpr, shd, pred_size
+    return {'fdr': fdr, 'tpr': tpr, 'fpr': fpr, 'shd': shd, 'nnz': pred_size}
