@@ -133,3 +133,4 @@ The data, ground truth graph, and the estimate will be stored in `X.csv`, `W_tru
 ## Other implementations  
 
 - Python: https://github.com/jmoss20/notears
+- Tensorflow with Python: https://github.com/ignavier/notears-tensorflow
