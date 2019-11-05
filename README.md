@@ -22,9 +22,11 @@ If you find it useful, please consider citing:
 ```
 
 
-## tl;dr Structure learning in <50 lines
+## tl;dr Structure learning in <60 lines
 
-Check out [`simple_demo.py`](simple_demo.py) for a complete, end-to-end implementation of the NOTEARS algorithm in fewer than **50 lines**.  
+Check out [`notears.py`](notears.py) for a complete, end-to-end implementation of the NOTEARS algorithm in fewer than **60 lines**.
+
+This includes L2, Logistic, and Poisson loss functions with L1 penalty. 
 
 
 ## Introduction
@@ -51,73 +53,31 @@ space of DAGs.
 ## Requirements
 
 - Python 3.5+
-- (optional) C++11 compiler
+- `numpy`
+- `scipy`
+- `python-igraph`: Install [igraph C core](https://igraph.org/c/) and `pkg-config` first.
+  
 
+## Contents (New version)
 
-## Contents
-
-- Simple NOTEARS (without l1 regularization)
-    - `simple_demo.py` - the 50-line implementation of simple NOTEARS
-    - `utils.py` - graph simulation, data simulation, and accuracy evaluation
-- Full NOTEARS (with l1 regularization)
-    - `cppext/` - C++ implementation of ProxQN
-    - `notears.py` - the full NOTEARS with live progress monitoring
-    - `live_demo.ipynb` - jupyter notebook for live demo
+- `notears.py` - the 60-line implementation of NOTEARS with l1 regularization for various losses
+- `utils.py` - graph simulation, data simulation, and accuracy evaluation
 
 
 ## Running a simple demo
 
-The simplest way to try out NOTEARS is to run the toy demo:
+The simplest way to try out NOTEARS is to run a simple example:
 ```bash
 $ git clone https://github.com/xunzheng/notears.git
 $ cd notears/
-$ pip install -r requirements.txt
-$ python simple_demo.py
+$ python notears.py
 ```
-This runs the [50-line version](simple_demo.py) of NOTEARS 
-without l1-regularization 
-on a randomly generated 10-node Erdos-Renyi graph. 
-Since the problem size is small, it will only take a few seconds.
-
-You should see output like this:
+This runs the l1-regularized NOTEARS on a randomly generated 20-node Erdos-Renyi graph with 100 samples. 
+Within a few seconds, you should see output like this:
 ```
-I1026 02:19:54.995781 87863 simple_demo.py:77] Graph: 10 node, avg degree 4, erdos-renyi graph
-I1026 02:19:54.995896 87863 simple_demo.py:78] Data: 1000 samples, linear-gauss SEM
-I1026 02:19:54.995944 87863 simple_demo.py:81] Simulating graph ...
-I1026 02:19:54.996556 87863 simple_demo.py:83] Simulating graph ... Done
-I1026 02:19:54.996608 87863 simple_demo.py:86] Simulating data ...
-I1026 02:19:54.997485 87863 simple_demo.py:88] Simulating data ... Done
-I1026 02:19:54.997534 87863 simple_demo.py:91] Solving equality constrained problem ...
-I1026 02:20:00.791475 87863 simple_demo.py:94] Solving equality constrained problem ... Done
-I1026 02:20:00.791845 87863 simple_demo.py:99] Accuracy: fdr 0.000000, tpr 1.000000, fpr 0.000000, shd 0, nnz 17
+{'fdr': 0.0, 'tpr': 1.0, 'fpr': 0.0, 'shd': 0, 'nnz': 20}
 ```
-
-
-## Running the full version
-
-The Proximal Quasi-Newton algorithm is at the core of the full NOTEARS with 
-l1-regularization. 
-Hence for efficiency concerns it is implemented in a C++ module `cppext` 
-using [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page).
-
-To install `cppext`, download Eigen submodule and compile the extension:
-```bash
-$ git submodule update --init --recursive
-$ cd cppext/
-$ python setup.py install
-$ cd .. 
-```
-
-The code comes with a Jupyter notebook that runs a live demo. This allows you to monitor the progress as the algorithm runs. Type
-```bash
-$ jupyter notebook
-```
-and click open [`live_demo.ipynb`](live_demo.ipynb) in
-the browser.
-Select *Kernel --> Restart & Run All*. 
-
-
-(TODO: gif)
+The data, ground truth graph, and the estimate will be stored in `X.csv`, `W_true.csv`, and `W_est.csv`. 
 
 
 ## Examples: Erdos-Renyi graph

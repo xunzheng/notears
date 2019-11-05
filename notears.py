@@ -86,15 +86,17 @@ if __name__ == '__main__':
     import utils as ut
     ut.set_random_seed(1)
 
-    n, d, s0, graph_type, sem_type = 100, 40, 40, 'ER', 'gauss'
+    n, d, s0, graph_type, sem_type = 100, 20, 20, 'ER', 'gauss'
     B_true = ut.simulate_dag(d, s0, graph_type)
     W_true = ut.simulate_parameter(B_true)
+    np.savetxt('W_true.csv', W_true, delimiter=',')
+
     X = ut.simulate_linear_sem(W_true, n, sem_type)
+    np.savetxt('X.csv', X, delimiter=',')
 
     W_est = notears_linear_l1(X, lambda1=0.1, loss_type='l2')
-
     import igraph as ig
     assert ig.Graph.Weighted_Adjacency(W_est.tolist()).is_dag()
-
+    np.savetxt('W_est.csv', W_est, delimiter=',')
     acc = ut.count_accuracy(W_true, W_est)
     print(acc)

@@ -52,19 +52,21 @@ def simulate_dag(d, s0, graph_type):
     return B_perm
 
 
-def simulate_parameter(B, w_range=(0.5, 2.0)):
+def simulate_parameter(B, w_ranges=((-2.0, -0.5), (0.5, 2.0))):
     """Simulate SEM parameters for a DAG.
 
     Args:
         B (np.ndarray): [d, d] binary adj matrix of DAG
-        w_range (tuple): weight range is +/- (low, high)
+        w_ranges (tuple): disjoint weight ranges
 
     Returns:
         W (np.ndarray): [d, d] weighted adj matrix of DAG
     """
-    S = np.random.randint(2, size=B.shape) * 2 - 1  # sign
-    U = np.random.uniform(low=w_range[0], high=w_range[1], size=B.shape)
-    W = B * S * U
+    W = np.zeros(B.shape)
+    S = np.random.randint(len(w_ranges), size=B.shape)  # which range
+    for i, (low, high) in enumerate(w_ranges):
+        U = np.random.uniform(low=low, high=high, size=B.shape)
+        W += B * (S == i) * U
     return W
 
 
