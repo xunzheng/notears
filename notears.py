@@ -99,5 +99,5 @@ if __name__ == '__main__':
     import igraph as ig
     assert ig.Graph.Weighted_Adjacency(W_est.tolist()).is_dag()
     np.savetxt('W_est.csv', W_est, delimiter=',')
-    acc = ut.count_accuracy(W_true, W_est)
+    acc = ut.count_accuracy(B_true, W_est != 0)
     print(acc)
