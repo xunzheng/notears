@@ -3,12 +3,12 @@ from setuptools import setup
 
 setup(
     name='notears',
-    version='2.0',
+    version='2.1',
     description='Implementation of the NOTEARS algorithm',
     author='Xun Zheng',
     author_email='xzheng1@andrew.cmu.edu',
     url='https://github.com/xunzheng/notears',
-    download_url='https://github.com/xunzheng/notears/archive/v2.0.zip',
+    download_url='https://github.com/xunzheng/notears/archive/v2.1.zip',
     license='Apache License 2.0',
     keywords='notears causal discovery bayesian network structure learning',
     classifiers=[
