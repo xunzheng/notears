@@ -24,7 +24,7 @@ If you find it useful, please consider citing:
 
 ## tl;dr Structure learning in <60 lines
 
-Check out [`notears.py`](notears.py) for a complete, end-to-end implementation of the NOTEARS algorithm in fewer than **60 lines**.
+Check out [`notears.py`](src/notears.py) for a complete, end-to-end implementation of the NOTEARS algorithm in fewer than **60 lines**.
 
 This includes L2, Logistic, and Poisson loss functions with L1 penalty. 
 
@@ -52,7 +52,7 @@ space of DAGs.
 
 ## Requirements
 
-- Python 3.5+
+- Python 3.6+
 - `numpy`
 - `scipy`
 - `python-igraph`: Install [igraph C core](https://igraph.org/c/) and `pkg-config` first.
@@ -70,7 +70,7 @@ The simplest way to try out NOTEARS is to run a simple example:
 ```bash
 $ git clone https://github.com/xunzheng/notears.git
 $ cd notears/
-$ python notears.py
+$ python src/notears.py
 ```
 This runs the l1-regularized NOTEARS on a randomly generated 20-node Erdos-Renyi graph with 100 samples. 
 Within a few seconds, you should see output like this:
@@ -78,6 +78,16 @@ Within a few seconds, you should see output like this:
 {'fdr': 0.0, 'tpr': 1.0, 'fpr': 0.0, 'shd': 0, 'nnz': 20}
 ```
 The data, ground truth graph, and the estimate will be stored in `X.csv`, `W_true.csv`, and `W_est.csv`. 
+
+
+## Running as a command
+
+Alternatively, if you have a CSV data file `X.csv`, you can install the package and run the algorithm as a command:
+```bash
+$ pip install git+git://github.com/xunzheng/notears
+$ notears_linear_l1 X.csv
+```
+The output graph will be stored in `W_est.csv`.
 
 
 ## Examples: Erdos-Renyi graph

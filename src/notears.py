@@ -96,8 +96,7 @@ if __name__ == '__main__':
     np.savetxt('X.csv', X, delimiter=',')
 
     W_est = notears_linear_l1(X, lambda1=0.1, loss_type='l2')
-    import igraph as ig
-    assert ig.Graph.Weighted_Adjacency(W_est.tolist()).is_dag()
+    assert ut.is_dag(W_est)
     np.savetxt('W_est.csv', W_est, delimiter=',')
     acc = ut.count_accuracy(B_true, W_est != 0)
     print(acc)
