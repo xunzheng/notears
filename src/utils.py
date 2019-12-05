@@ -138,7 +138,7 @@ def count_accuracy(B_true, B_est):
         shd: undirected extra + undirected missing + reverse
         nnz: prediction positive
     """
-    if (B_est == -1).any() and ((B_est == -1) == (B_est.T == -1)).any():
+    if ((B_est == -1) & (B_est.T == -1)).any():
         raise ValueError('undirected edge should only appear once')
     d = B_true.shape[0]
     # linear index of nonzeros
