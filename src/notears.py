@@ -100,3 +100,4 @@ if __name__ == '__main__':
     np.savetxt('W_est.csv', W_est, delimiter=',')
     acc = ut.count_accuracy(B_true, W_est != 0)
     print(acc)
+

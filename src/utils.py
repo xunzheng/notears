@@ -75,28 +75,28 @@ def simulate_parameter(B, w_ranges=((-2.0, -0.5), (0.5, 2.0))):
     return W
 
 
-def simulate_linear_sem(W, n, sem_type, noise_scale=1.0):
+def simulate_linear_sem(W, n, sem_type, noise_scale=None):
     """Simulate samples from linear SEM with specified type of noise.
 
     Args:
         W (np.ndarray): [d, d] weighted adj matrix of DAG
         n (int): num of samples, n=inf mimics population risk
         sem_type (str): gauss, exp, gumbel, logistic, poisson
-        noise_scale (float): scale parameter of additive noise
+        noise_scale (np.ndarray): scale parameter of additive noise, default all ones
 
     Returns:
         X (np.ndarray): [n, d] sample matrix, [d, d] if n=inf
     """
-    def _simulate_single_equation(X, w):
+    def _simulate_single_equation(X, w, scale):
         """X: [n, num of parents], w: [num of parents], x: [n]"""
         if sem_type == 'gauss':
-            z = np.random.normal(scale=noise_scale, size=n)
+            z = np.random.normal(scale=scale, size=n)
             x = X @ w + z
         elif sem_type == 'exp':
-            z = np.random.exponential(scale=noise_scale, size=n)
+            z = np.random.exponential(scale=scale, size=n)
             x = X @ w + z
         elif sem_type == 'gumbel':
-            z = np.random.gumbel(scale=noise_scale, size=n)
+            z = np.random.gumbel(scale=scale, size=n)
             x = X @ w + z
         elif sem_type == 'logistic':
             x = np.random.binomial(1, sigmoid(X @ w)) * 1.0
@@ -107,10 +107,11 @@ def simulate_linear_sem(W, n, sem_type, noise_scale=1.0):
         return x
 
     d = W.shape[0]
+    scale_vec = noise_scale if noise_scale else np.ones(d)
     if np.isinf(n):
         if sem_type == 'gauss':
             # make 1/d X'X = true cov
-            X = np.sqrt(d) * noise_scale * np.linalg.pinv(np.eye(d) - W)
+            X = np.sqrt(d) * np.diag(scale_vec) @ np.linalg.pinv(np.eye(d) - W)
             return X
         else:
             raise ValueError('population risk not available')
@@ -120,7 +121,7 @@ def simulate_linear_sem(W, n, sem_type, noise_scale=1.0):
     assert len(ordered_vertices) == d
     for j in ordered_vertices:
         parents = G.neighbors(j, mode=ig.IN)
-        X[:, j] = _simulate_single_equation(X[:, parents], W[parents, j])
+        X[:, j] = _simulate_single_equation(X[:, parents], W[parents, j], scale_vec[j])
     return X
 
 
@@ -172,3 +173,4 @@ def count_accuracy(B_true, B_est):
     missing_lower = np.setdiff1d(cond_lower, pred_lower, assume_unique=True)
     shd = len(extra_lower) + len(missing_lower) + len(reverse)
     return {'fdr': fdr, 'tpr': tpr, 'fpr': fpr, 'shd': shd, 'nnz': pred_size}
+
