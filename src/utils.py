@@ -128,6 +128,10 @@ def simulate_linear_sem(W, n, sem_type, noise_scale=None):
 def count_accuracy(B_true, B_est):
     """Compute various accuracy metrics for B_est.
 
+    true positive = predicted association exists in condition in correct direction
+    reverse = predicted association exists in condition in opposite direction
+    false positive = predicted association does not exist in condition
+
     Args:
         B_true (np.ndarray): [d, d] ground truth graph, {0, 1}
         B_est (np.ndarray): [d, d] estimate, {0, 1, -1}, -1 is undirected edge in CPDAG
@@ -139,8 +143,16 @@ def count_accuracy(B_true, B_est):
         shd: undirected extra + undirected missing + reverse
         nnz: prediction positive
     """
-    if ((B_est == -1) & (B_est.T == -1)).any():
-        raise ValueError('undirected edge should only appear once')
+    if (B_est == -1).any():  # cpdag
+        if not ((B_est == 0) | (B_est == 1) | (B_est == -1)).all():
+            raise ValueError('B_est should take value in {0,1,-1}')
+        if ((B_est == -1) & (B_est.T == -1)).any():
+            raise ValueError('undirected edge should only appear once')
+    else:  # dag
+        if not ((B_est == 0) | (B_est == 1)).all():
+            raise ValueError('B_est should take value in {0,1}')
+        if not is_dag(B_est):
+            raise ValueError('B_est should be a DAG')
     d = B_true.shape[0]
     # linear index of nonzeros
     pred_und = np.flatnonzero(B_est == -1)

@@ -40,16 +40,20 @@ def run_expt(num_graph, num_data_per_graph, n, d, s0, graph_type, sem_type, w_ra
     for ii in tqdm(range(num_graph)):
         B_true = utils.simulate_dag(d, s0, graph_type)
         W_true = utils.simulate_parameter(B_true, w_ranges=w_ranges)
-        np.savetxt(f'{expt_name}/graph{ii:05}_W_true.csv', W_true, delimiter=',')
+        W_true_fn = os.path.join(expt_name, f'graph{ii:05}_W_true.csv')
+        np.savetxt(W_true_fn, W_true, delimiter=',')
         for jj in range(num_data_per_graph):
             X = utils.simulate_linear_sem(W_true, n, sem_type, noise_scale=noise_scale)
-            np.savetxt(f'{expt_name}/graph{ii:05}_data{jj:05}_X.csv', X, delimiter=',')
+            X_fn = os.path.join(expt_name, f'graph{ii:05}_data{jj:05}_X.csv')
+            np.savetxt(X_fn, X, delimiter=',')
             # notears
-            W_est = notears.notears_linear_l1(X, lambda1=0, loss_type='l2')
-            assert utils.is_dag(W_est)
-            np.savetxt(f'{expt_name}/graph{ii:05}_data{jj:05}_W_notears.csv', W_est, delimiter=',')
+            W_notears = notears.notears_linear_l1(X, lambda1=0, loss_type='l2')
+            assert utils.is_dag(W_notears)
+            W_notears_fn = os.path.join(expt_name, f'graph{ii:05}_data{jj:05}_W_notears.csv')
+            np.savetxt(W_notears_fn, W_notears, delimiter=',')
             # eval
-            acc = utils.count_accuracy(B_true, W_est != 0)
+            B_notears = (W_notears != 0)
+            acc = utils.count_accuracy(B_true, B_notears)
             for metric in acc:
                 perf[metric].append(acc[metric])
     # print stats
