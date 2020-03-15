@@ -4,7 +4,7 @@ import scipy.optimize as sopt
 from scipy.special import expit as sigmoid
 
 
-def notears_linear_l1(X, lambda1, loss_type, max_iter=100, h_tol=1e-8, rho_max=1e+16, w_threshold=0.3):
+def notears_linear(X, lambda1, loss_type, max_iter=100, h_tol=1e-8, rho_max=1e+16, w_threshold=0.3):
     """Solve min_W L(W; X) + lambda1 ‖W‖_1 s.t. h(W) = 0 using augmented Lagrangian.
 
     Args:
@@ -84,7 +84,7 @@ def notears_linear_l1(X, lambda1, loss_type, max_iter=100, h_tol=1e-8, rho_max=1
 
 
 if __name__ == '__main__':
-    import utils as ut
+    import src.utils as ut
     ut.set_random_seed(1)
 
     n, d, s0, graph_type, sem_type = 100, 20, 20, 'ER', 'gauss'
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     X = ut.simulate_linear_sem(W_true, n, sem_type)
     np.savetxt('X.csv', X, delimiter=',')
 
-    W_est = notears_linear_l1(X, lambda1=0.1, loss_type='l2')
+    W_est = notears_linear(X, lambda1=0.1, loss_type='l2')
     assert ut.is_dag(W_est)
     np.savetxt('W_est.csv', W_est, delimiter=',')
     acc = ut.count_accuracy(B_true, W_est != 0)
