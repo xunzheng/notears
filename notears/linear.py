@@ -84,7 +84,7 @@ def notears_linear(X, lambda1, loss_type, max_iter=100, h_tol=1e-8, rho_max=1e+1
 
 
 if __name__ == '__main__':
-    import src.utils as ut
+    import notears.utils as ut
     ut.set_random_seed(1)
 
     n, d, s0, graph_type, sem_type = 100, 20, 20, 'ER', 'gauss'

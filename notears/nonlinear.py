@@ -1,5 +1,5 @@
-from src.locally_connected import LocallyConnected
-from src.lbfgsb_scipy import LBFGSBScipy
+from notears.locally_connected import LocallyConnected
+from notears.lbfgsb_scipy import LBFGSBScipy
 import torch
 import torch.nn as nn
 import numpy as np
@@ -211,9 +211,8 @@ def main():
     torch.set_default_dtype(torch.double)
     np.set_printoptions(precision=3)
 
-    import src.utils as ut
+    import notears.utils as ut
     ut.set_random_seed(123)
-    torch.manual_seed(123)
 
     n, d, s0, graph_type, sem_type = 200, 5, 9, 'ER', 'mim'
     B_true = ut.simulate_dag(d, s0, graph_type)

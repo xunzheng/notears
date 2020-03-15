@@ -20,6 +20,6 @@ setup(
     scripts=['bin/notears_linear',
              'bin/notears_nonlinear'],
     packages=['notears'],
-    package_dir={'notears': 'src'},
+    package_dir={'notears': 'notears'},
     install_requires=['numpy', 'scipy', 'python-igraph'],
 )

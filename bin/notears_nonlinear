@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 from notears import nonlinear, utils
+import torch
 import numpy as np
 import argparse
 
 
 def main(args):
+    torch.set_default_dtype(torch.double)
+    np.set_printoptions(precision=3)
+
     X = np.loadtxt(args.X_path, delimiter=',')
     n, d = X.shape
     model = nonlinear.NotearsMLP(dims=[d, args.hidden, 1], bias=True)

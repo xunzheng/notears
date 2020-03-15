@@ -3,7 +3,11 @@ import scipy.optimize as sopt
 
 
 class LBFGSBScipy(torch.optim.Optimizer):
-    """Wrap L-BFGS-B algorithm, using scipy routines."""
+    """Wrap L-BFGS-B algorithm, using scipy routines.
+    
+    Courtesy: Arthur Mensch's gist
+    https://gist.github.com/arthurmensch/c55ac413868550f89225a0b9212aa4cd
+    """
 
     def __init__(self, params):
         defaults = dict()
@@ -81,7 +85,7 @@ class LBFGSBScipy(torch.optim.Optimizer):
 
         bounds = self._gather_flat_bounds()
 
-        # How can it work without getting the final solution..?
+        # Magic
         sol = sopt.minimize(wrapped_closure,
                             initial_params,
                             method='L-BFGS-B',
