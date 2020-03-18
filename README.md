@@ -1,17 +1,22 @@
 # DAGs with NO TEARS :no_entry_sign::droplet:
 
-This is an implementation of the following paper:
+This is an implementation of the following papers:
 
-[DAGs with NO TEARS: Continuous Optimization for 
+[1] Zheng, X., Aragam, B., Ravikumar, P., & Xing, E. P. (2018). [DAGs with NO TEARS: Continuous optimization for structure learning](https://arxiv.org/abs/1803.01422) ([NeurIPS 2018](https://nips.cc/Conferences/2018/), Spotlight).
+
+[2] Zheng, X., Dan, C., Aragam, B., Ravikumar, P., & Xing, E. P. (2020). [Learning 
+sparse nonparametric DAGs](https://arxiv.org/abs/1909.13189) ([AISTATS 2020](https://aistats.org/), to appear).
+
+<!-- [DAGs with NO TEARS: Continuous Optimization for 
 Structure Learning](https://arxiv.org/abs/1803.01422) 
 ([NeurIPS 2018](https://nips.cc/Conferences/2018/), Spotlight)
 
 [Xun Zheng](https://www.cs.cmu.edu/~xunzheng/), 
-[Bryon Aragam](https://www.cs.cmu.edu/~naragam/),
+[Bryon Aragam](https://www.bryonaragam.com/),
 [Pradeep Ravikumar](https://www.cs.cmu.edu/~pradeepr/),
-[Eric Xing](https://www.cs.cmu.edu/~epxing/).
+[Eric Xing](https://www.cs.cmu.edu/~epxing/). -->
 
-If you find it useful, please consider citing:
+If you find this code useful, please consider citing:
 ```
 @inproceedings{zheng2018dags,
     author = {Zheng, Xun and Aragam, Bryon and Ravikumar, Pradeep and Xing, Eric P.},
@@ -21,6 +26,18 @@ If you find it useful, please consider citing:
 }
 ```
 
+```
+@inproceedings{zheng2020learning,
+    author = {Zheng, Xun and Dan, Chen and Aragam, Bryon and Ravikumar, Pradeep and Xing, Eric P.},
+    booktitle = {International Conference on Artificial Intelligence and Statistics},
+    title = {{Learning sparse nonparametric DAGs}},
+    year = {2020}
+}
+```
+
+## Update
+
+Code for nonlinear NOTEARS has been added. See [[2](https://arxiv.org/abs/1909.13189)] for details.
 
 ## tl;dr Structure learning in <60 lines
 
