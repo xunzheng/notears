@@ -73,7 +73,7 @@ space of DAGs.
 - `numpy`
 - `scipy`
 - `python-igraph`: Install [igraph C core](https://igraph.org/c/) and `pkg-config` first.
-- `torch': Optional, only used for nonlinear model.
+- `torch`: Optional, only used for nonlinear model.
 
 ## Contents (New version)
 
