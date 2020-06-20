@@ -41,7 +41,7 @@ Code for nonlinear NOTEARS has been added. See [[2](https://arxiv.org/abs/1909.1
 
 ## tl;dr Structure learning in <60 lines
 
-Check out [`linear.py`](src/linear.py) for a complete, end-to-end implementation of the NOTEARS algorithm in fewer than **60 lines**.
+Check out [`linear.py`](notears/linear.py) for a complete, end-to-end implementation of the NOTEARS algorithm in fewer than **60 lines**.
 
 This includes L2, Logistic, and Poisson loss functions with L1 penalty. 
 
@@ -90,7 +90,7 @@ The simplest way to try out NOTEARS is to run a simple example:
 ```bash
 $ git clone https://github.com/xunzheng/notears.git
 $ cd notears/
-$ python src/linear.py
+$ python notears/linear.py
 ```
 This runs the l1-regularized NOTEARS on a randomly generated 20-node Erdos-Renyi graph with 100 samples. 
 Within a few seconds, you should see output like this:
