@@ -64,6 +64,8 @@ def notears_linear(X, lambda1, loss_type, max_iter=100, h_tol=1e-8, rho_max=1e+1
     n, d = X.shape
     w_est, rho, alpha, h = np.zeros(2 * d * d), 1.0, 0.0, np.inf  # double w_est into (w_pos, w_neg)
     bnds = [(0, 0) if i == j else (0, None) for _ in range(2) for i in range(d) for j in range(d)]
+    if loss_type == 'l2':
+        X = X - np.mean(X, axis=0, keepdims=True)
     for _ in range(max_iter):
         w_new, h_new = None, None
         while rho < rho_max:
@@ -84,20 +86,20 @@ def notears_linear(X, lambda1, loss_type, max_iter=100, h_tol=1e-8, rho_max=1e+1
 
 
 if __name__ == '__main__':
-    import notears.utils as ut
-    ut.set_random_seed(1)
+    from notears import utils
+    utils.set_random_seed(1)
 
     n, d, s0, graph_type, sem_type = 100, 20, 20, 'ER', 'gauss'
-    B_true = ut.simulate_dag(d, s0, graph_type)
-    W_true = ut.simulate_parameter(B_true)
+    B_true = utils.simulate_dag(d, s0, graph_type)
+    W_true = utils.simulate_parameter(B_true)
     np.savetxt('W_true.csv', W_true, delimiter=',')
 
-    X = ut.simulate_linear_sem(W_true, n, sem_type)
+    X = utils.simulate_linear_sem(W_true, n, sem_type)
     np.savetxt('X.csv', X, delimiter=',')
 
     W_est = notears_linear(X, lambda1=0.1, loss_type='l2')
-    assert ut.is_dag(W_est)
+    assert utils.is_dag(W_est)
     np.savetxt('W_est.csv', W_est, delimiter=',')
-    acc = ut.count_accuracy(B_true, W_est != 0)
+    acc = utils.count_accuracy(B_true, W_est != 0)
     print(acc)
 
