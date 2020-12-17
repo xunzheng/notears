@@ -39,11 +39,12 @@ def notears_linear(X, lambda1, loss_type, max_iter=100, h_tol=1e-8, rho_max=1e+1
 
     def _h(W):
         """Evaluate value and gradient of acyclicity constraint."""
-        #     E = slin.expm(W * W)  # (Zheng et al. 2018)
-        #     h = np.trace(E) - d
-        M = np.eye(d) + W * W / d  # (Yu et al. 2019)
-        E = np.linalg.matrix_power(M, d - 1)
-        h = (E.T * M).sum() - d
+        E = slin.expm(W * W)  # (Zheng et al. 2018)
+        h = np.trace(E) - d
+        #     # A different formulation, slightly faster at the cost of numerical stability
+        #     M = np.eye(d) + W * W / d  # (Yu et al. 2019)
+        #     E = np.linalg.matrix_power(M, d - 1)
+        #     h = (E.T * M).sum() - d
         G_h = E.T * W * 2
         return h, G_h
 
