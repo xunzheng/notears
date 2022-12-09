@@ -1,5 +1,7 @@
 # DAGs with NO TEARS :no_entry_sign::droplet:
 
+**[Update 12/8/22]** Interested in faster and more accurate structure learning? See our new [DAGMA](https://github.com/kevinsbello/dagma) library from [NeurIPS 2022](https://arxiv.org/abs/2209.08037).
+
 This is an implementation of the following papers:
 
 [1] Zheng, X., Aragam, B., Ravikumar, P., & Xing, E. P. (2018). [DAGs with NO TEARS: Continuous optimization for structure learning](https://arxiv.org/abs/1803.01422) ([NeurIPS 2018](https://nips.cc/Conferences/2018/), Spotlight).
@@ -34,10 +36,6 @@ If you find this code useful, please consider citing:
     year = {2020}
 }
 ```
-
-## Update
-
-Code for nonlinear NOTEARS has been added. See [[2](https://arxiv.org/abs/1909.13189)] for details.
 
 ## tl;dr Structure learning in <60 lines
 
