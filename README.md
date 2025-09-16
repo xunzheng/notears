@@ -102,7 +102,7 @@ The data, ground truth graph, and the estimate will be stored in `X.csv`, `W_tru
 
 Alternatively, if you have a CSV data file `X.csv`, you can install the package and run the algorithm as a command:
 ```bash
-$ pip install git+git://github.com/xunzheng/notears
+$ pip install git+https://github.com/xunzheng/notears.git
 $ notears_linear X.csv
 ```
 The output graph will be stored in `W_est.csv`.
