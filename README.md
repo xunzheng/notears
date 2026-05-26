@@ -1,6 +1,6 @@
 # DAGs with NO TEARS :no_entry_sign::droplet:
 
-**[Update 12/8/22]** Interested in faster and more accurate structure learning? See our new [DAGMA](https://github.com/kevinsbello/dagma) library from [NeurIPS 2022](https://arxiv.org/abs/2209.08037).
+**[Update]** Interested in faster and more accurate structure learning? See our new [dagrad](https://github.com/duntrain/dagrad) library for developing and experimenting with newer differentiable (gradient-based) structure learning methods.
 
 This is an implementation of the following papers:
 
