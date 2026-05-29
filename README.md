@@ -45,8 +45,17 @@ This includes L2, Logistic, and Poisson loss functions with L1 penalty.
 
 
 ## Introduction
+Bayesian network, also known as reliability network, is an extension of Bayes method 
+and is one of the most effective theoretical models in the field of uncertain knowledge 
+representation and reasoning. Since it was proposed by Pearl in 1988, it has become 
+a research hotspot in recent years. A Bayesian network is a directed acyclic graph 
+consisting of nodes representing variables and directed edges connecting these nodes. 
+Nodes represent random variables, and the directed edges between nodes represent the mutual 
+relationship between nodes (from parent node to child node). Conditional probability 
+is used to express the relationship strength, and prior probability is used to 
+express information without parent node.
 
-A directed acyclic graphical model (aka Bayesian network) with `d` nodes defines a 
+A directed acyclic graphical model with `d` nodes defines a 
 distribution of random vector of size `d`. 
 We are interested in the Bayesian Network Structure Learning (BNSL) problem: 
 given `n` samples from such distribution, how to estimate the graph `G`? 
